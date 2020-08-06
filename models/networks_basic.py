@@ -9,7 +9,7 @@ from torch.autograd import Variable
 import numpy as np
 from pdb import set_trace as st
 from skimage import color
-from IPython import embed
+# from IPython import embed
 from . import pretrained_networks as pn
 
 import models as util
@@ -59,14 +59,13 @@ class PNetLin(nn.Module):
             if(self.pnet_type=='squeeze'): # 7 layers for squeezenet
                 self.lin5 = NetLinLayer(self.chns[5], use_dropout=use_dropout)
                 self.lin6 = NetLinLayer(self.chns[6], use_dropout=use_dropout)
-                self.lins+=[self.lin5,self.lin6]
+                self.lins += [self.lin5,self.lin6]
 
     def forward(self, in0, in1, retPerLayer=False):
         # v0.0 - original release had a bug, where input was not scaled
         in0_input, in1_input = (self.scaling_layer(in0), self.scaling_layer(in1)) if self.version=='0.1' else (in0, in1)
         outs0, outs1 = self.net.forward(in0_input), self.net.forward(in1_input)
         feats0, feats1, diffs = {}, {}, {}
-
         for kk in range(self.L):
             feats0[kk], feats1[kk] = util.normalize_tensor(outs0[kk]), util.normalize_tensor(outs1[kk])
             diffs[kk] = (feats0[kk]-feats1[kk])**2

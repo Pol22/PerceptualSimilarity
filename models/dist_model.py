@@ -14,9 +14,9 @@ from scipy.ndimage import zoom
 import fractions
 import functools
 import skimage.transform
-from tqdm import tqdm
+# from tqdm import tqdm
 
-from IPython import embed
+# from IPython import embed
 
 from . import networks_basic as networks
 import models as util
@@ -110,7 +110,6 @@ class DistModel(BaseModel):
         OUTPUT
             computed distances between in0 and in1
         '''
-
         return self.net.forward(in0, in1, retPerLayer=retPerLayer)
 
     # ***** TRAINING FUNCTIONS *****
@@ -206,76 +205,76 @@ class DistModel(BaseModel):
         print('update lr [%s] decay: %f -> %f' % (type,self.old_lr, lr))
         self.old_lr = lr
 
-def score_2afc_dataset(data_loader, func, name=''):
-    ''' Function computes Two Alternative Forced Choice (2AFC) score using
-        distance function 'func' in dataset 'data_loader'
-    INPUTS
-        data_loader - CustomDatasetDataLoader object - contains a TwoAFCDataset inside
-        func - callable distance function - calling d=func(in0,in1) should take 2
-            pytorch tensors with shape Nx3xXxY, and return numpy array of length N
-    OUTPUTS
-        [0] - 2AFC score in [0,1], fraction of time func agrees with human evaluators
-        [1] - dictionary with following elements
-            d0s,d1s - N arrays containing distances between reference patch to perturbed patches 
-            gts - N array in [0,1], preferred patch selected by human evaluators
-                (closer to "0" for left patch p0, "1" for right patch p1,
-                "0.6" means 60pct people preferred right patch, 40pct preferred left)
-            scores - N array in [0,1], corresponding to what percentage function agreed with humans
-    CONSTS
-        N - number of test triplets in data_loader
-    '''
+# def score_2afc_dataset(data_loader, func, name=''):
+#     ''' Function computes Two Alternative Forced Choice (2AFC) score using
+#         distance function 'func' in dataset 'data_loader'
+#     INPUTS
+#         data_loader - CustomDatasetDataLoader object - contains a TwoAFCDataset inside
+#         func - callable distance function - calling d=func(in0,in1) should take 2
+#             pytorch tensors with shape Nx3xXxY, and return numpy array of length N
+#     OUTPUTS
+#         [0] - 2AFC score in [0,1], fraction of time func agrees with human evaluators
+#         [1] - dictionary with following elements
+#             d0s,d1s - N arrays containing distances between reference patch to perturbed patches 
+#             gts - N array in [0,1], preferred patch selected by human evaluators
+#                 (closer to "0" for left patch p0, "1" for right patch p1,
+#                 "0.6" means 60pct people preferred right patch, 40pct preferred left)
+#             scores - N array in [0,1], corresponding to what percentage function agreed with humans
+#     CONSTS
+#         N - number of test triplets in data_loader
+#     '''
 
-    d0s = []
-    d1s = []
-    gts = []
+#     d0s = []
+#     d1s = []
+#     gts = []
 
-    for data in tqdm(data_loader.load_data(), desc=name):
-        d0s+=func(data['ref'],data['p0']).data.cpu().numpy().flatten().tolist()
-        d1s+=func(data['ref'],data['p1']).data.cpu().numpy().flatten().tolist()
-        gts+=data['judge'].cpu().numpy().flatten().tolist()
+#     for data in tqdm(data_loader.load_data(), desc=name):
+#         d0s+=func(data['ref'],data['p0']).data.cpu().numpy().flatten().tolist()
+#         d1s+=func(data['ref'],data['p1']).data.cpu().numpy().flatten().tolist()
+#         gts+=data['judge'].cpu().numpy().flatten().tolist()
 
-    d0s = np.array(d0s)
-    d1s = np.array(d1s)
-    gts = np.array(gts)
-    scores = (d0s<d1s)*(1.-gts) + (d1s<d0s)*gts + (d1s==d0s)*.5
+#     d0s = np.array(d0s)
+#     d1s = np.array(d1s)
+#     gts = np.array(gts)
+#     scores = (d0s<d1s)*(1.-gts) + (d1s<d0s)*gts + (d1s==d0s)*.5
 
-    return(np.mean(scores), dict(d0s=d0s,d1s=d1s,gts=gts,scores=scores))
+#     return(np.mean(scores), dict(d0s=d0s,d1s=d1s,gts=gts,scores=scores))
 
-def score_jnd_dataset(data_loader, func, name=''):
-    ''' Function computes JND score using distance function 'func' in dataset 'data_loader'
-    INPUTS
-        data_loader - CustomDatasetDataLoader object - contains a JNDDataset inside
-        func - callable distance function - calling d=func(in0,in1) should take 2
-            pytorch tensors with shape Nx3xXxY, and return pytorch array of length N
-    OUTPUTS
-        [0] - JND score in [0,1], mAP score (area under precision-recall curve)
-        [1] - dictionary with following elements
-            ds - N array containing distances between two patches shown to human evaluator
-            sames - N array containing fraction of people who thought the two patches were identical
-    CONSTS
-        N - number of test triplets in data_loader
-    '''
+# def score_jnd_dataset(data_loader, func, name=''):
+#     ''' Function computes JND score using distance function 'func' in dataset 'data_loader'
+#     INPUTS
+#         data_loader - CustomDatasetDataLoader object - contains a JNDDataset inside
+#         func - callable distance function - calling d=func(in0,in1) should take 2
+#             pytorch tensors with shape Nx3xXxY, and return pytorch array of length N
+#     OUTPUTS
+#         [0] - JND score in [0,1], mAP score (area under precision-recall curve)
+#         [1] - dictionary with following elements
+#             ds - N array containing distances between two patches shown to human evaluator
+#             sames - N array containing fraction of people who thought the two patches were identical
+#     CONSTS
+#         N - number of test triplets in data_loader
+#     '''
 
-    ds = []
-    gts = []
+#     ds = []
+#     gts = []
 
-    for data in tqdm(data_loader.load_data(), desc=name):
-        ds+=func(data['p0'],data['p1']).data.cpu().numpy().tolist()
-        gts+=data['same'].cpu().numpy().flatten().tolist()
+#     for data in tqdm(data_loader.load_data(), desc=name):
+#         ds+=func(data['p0'],data['p1']).data.cpu().numpy().tolist()
+#         gts+=data['same'].cpu().numpy().flatten().tolist()
 
-    sames = np.array(gts)
-    ds = np.array(ds)
+#     sames = np.array(gts)
+#     ds = np.array(ds)
 
-    sorted_inds = np.argsort(ds)
-    ds_sorted = ds[sorted_inds]
-    sames_sorted = sames[sorted_inds]
+#     sorted_inds = np.argsort(ds)
+#     ds_sorted = ds[sorted_inds]
+#     sames_sorted = sames[sorted_inds]
 
-    TPs = np.cumsum(sames_sorted)
-    FPs = np.cumsum(1-sames_sorted)
-    FNs = np.sum(sames_sorted)-TPs
+#     TPs = np.cumsum(sames_sorted)
+#     FPs = np.cumsum(1-sames_sorted)
+#     FNs = np.sum(sames_sorted)-TPs
 
-    precs = TPs/(TPs+FPs)
-    recs = TPs/(TPs+FNs)
-    score = util.voc_ap(recs,precs)
+#     precs = TPs/(TPs+FPs)
+#     recs = TPs/(TPs+FNs)
+#     score = util.voc_ap(recs,precs)
 
-    return(score, dict(ds=ds,sames=sames))
+#     return(score, dict(ds=ds,sames=sames))
